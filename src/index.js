@@ -43,6 +43,7 @@ async function onSubmit (event) {
         const {data:{hits, totalHits}} = response;
         
         if (hits.length === 0){
+            refs.loadMoreBtn.setAttribute("hidden", true);
             Notify.failure("Sorry, there are no images matching your search query. Please try again.");
             return
         }
