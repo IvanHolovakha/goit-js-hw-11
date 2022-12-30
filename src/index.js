@@ -80,7 +80,8 @@ async function onLoadMoreBtn(){
 };
 
 function renderGalleryCards(cards) {
-   return galleryCardsMarkup = cards.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads})=>{
+   return galleryCardsMarkup = cards.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads}) =>
+   {
         return `<div class="photo-card">
         <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
         
