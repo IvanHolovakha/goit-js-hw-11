@@ -57,7 +57,6 @@ async function onSubmit (event) {
 
         Notify.success(`Hooray! We found ${totalHits} images.`);
         renderGalleryCards(hits);
-        refs.gallery.insertAdjacentHTML("beforeend", galleryCardsMarkup);
         lightbox.refresh();
     } catch (error) {
         console.log(error.message)};
@@ -70,7 +69,6 @@ async function onLoadMoreBtn(){
     const response = await fetchPixabay(searchRequest, pageNumber, perPageQuantity);
     const {data:{hits, totalHits}} = response;
     renderGalleryCards(hits);
-    refs.gallery.insertAdjacentHTML("beforeend", galleryCardsMarkup);
     lightbox.refresh();      
 
     if(pageNumber === Math.ceil(totalHits/perPageQuantity)){
@@ -80,8 +78,7 @@ async function onLoadMoreBtn(){
 };
 
 function renderGalleryCards(cards) {
-   return galleryCardsMarkup = cards.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads}) =>
-   {
+    const galleryCardsMarkup = cards.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads})=>{
         return `<div class="photo-card">
         <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
         
@@ -101,4 +98,5 @@ function renderGalleryCards(cards) {
         </div>
       </div>`
     }).join('');   
+    refs.gallery.insertAdjacentHTML("beforeend", galleryCardsMarkup);
 };
