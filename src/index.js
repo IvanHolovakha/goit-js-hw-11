@@ -1,6 +1,7 @@
 import { fetchPixabay } from "./fetchPixabay";
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-// import axios from "axios";
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
 const refs = {
     searchForm: document.querySelector("#search-form"),
@@ -9,34 +10,43 @@ const refs = {
     loadMoreBtn: document.querySelector(".load-more"),
 }
 
+
 let pageNumber;
 let searchRequest;
 const perPageQuantity = 40;
+
+const lightbox = new SimpleLightbox('.photo-card a', {
+    captions: true,
+    captionsData: 'alt',
+    captionDelay: 250,
+});
 
 refs.loadMoreBtn.setAttribute("hidden", true);
 refs.searchForm.addEventListener("submit", onSubmit);
 refs.loadMoreBtn.addEventListener("click", onLoadMoreBtn);
 
-function onSubmit (event) {
+async function onSubmit (event) {
     event.preventDefault();
 
-    refs.gallery.innerHTML = '';
-    pageNumber = 1;
-    searchRequest = refs.searchInput.value;
+    try {
+        refs.gallery.innerHTML = '';
+        pageNumber = 1;
+        searchRequest = refs.searchInput.value;
 
-    if (!searchRequest){
-        Notify.info("Please enter your search query!");
-        refs.loadMoreBtn.setAttribute("hidden", true);
-        return
-    }
-
-    fetchPixabay(searchRequest, pageNumber, perPageQuantity).then(({data:{hits, totalHits}}) => {
-
-        if (hits.length === 0){
-            Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+        if (!searchRequest){
+            Notify.info("Please enter your search query!");
+            refs.loadMoreBtn.setAttribute("hidden", true);
             return
         }
-       
+
+        const response = await fetchPixabay(searchRequest, pageNumber, perPageQuantity);
+        const {data:{hits, totalHits}} = response;
+        
+        if (hits.length === 0){
+            Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+            return
+        }
+        
         if(pageNumber === Math.ceil(totalHits/perPageQuantity)){
             refs.loadMoreBtn.setAttribute("hidden", true);
             Notify.info("We're sorry, but you've reached the end of search results.");
@@ -47,46 +57,46 @@ function onSubmit (event) {
         Notify.success(`Hooray! We found ${totalHits} images.`);
         renderGalleryCards(hits);
         refs.gallery.insertAdjacentHTML("beforeend", galleryCardsMarkup);
-        
-    }).catch (error=>
-        console.log(error.message))
-    
-}
+        lightbox.refresh();
+    } catch (error) {
+        console.log(error.message)};
+};
 
-function onLoadMoreBtn(){
+async function onLoadMoreBtn(){
     pageNumber +=1;
     searchRequest = refs.searchInput.value;
 
-    fetchPixabay(searchRequest, pageNumber).then(({data:{hits, totalHits}}) => {
-        renderGalleryCards(hits);
-        refs.gallery.insertAdjacentHTML("beforeend", galleryCardsMarkup);      
+    const response = await fetchPixabay(searchRequest, pageNumber, perPageQuantity);
+    const {data:{hits, totalHits}} = response;
+    renderGalleryCards(hits);
+    refs.gallery.insertAdjacentHTML("beforeend", galleryCardsMarkup);
+    lightbox.refresh();      
 
-        if(pageNumber === Math.ceil(totalHits/perPageQuantity)){
-            refs.loadMoreBtn.setAttribute("hidden", true);
-            Notify.info("We're sorry, but you've reached the end of search results.");
-        }
-    })
-}
+    if(pageNumber === Math.ceil(totalHits/perPageQuantity)){
+        refs.loadMoreBtn.setAttribute("hidden", true);
+        Notify.info("We're sorry, but you've reached the end of search results.");
+    };
+};
 
 function renderGalleryCards(cards) {
    return galleryCardsMarkup = cards.map(({webformatURL, largeImageURL, tags, likes, views, comments, downloads})=>{
         return `<div class="photo-card">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+        <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
+        
         <div class="info">
           <p class="info-item">
-            <b>Likes${likes}</b>
+            <b>Likes</b>${likes}
           </p>
           <p class="info-item">
-            <b>Views${views}</b>
+            <b>Views</b>${views}
           </p>
           <p class="info-item">
-            <b>Comments${comments}</b>
+            <b>Comments</b>${comments}
           </p>
           <p class="info-item">
-            <b>Downloads${downloads}</b>
+            <b>Downloads</b>${downloads}
           </p>
         </div>
       </div>`
-    }).join('');
-    
-}
+    }).join('');   
+};
